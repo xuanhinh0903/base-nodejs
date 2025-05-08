@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  todolist:
+    container_name: todolist
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "9090:9090"
+    restart: unless-stopped
+    networks:
+      - app-network
+  postgres:
+    container_name: todolist-postgres
+    image: postgres:latest
+    platform: linux/amd64
+    ports:
+      - '6000:5432' # Changed host port to 5433 to avoid conflicts with local PostgreSQL
+    volumes:
+      - postgis-data:/var/lib/postgresql/data
+    env_file:
+      - .env
+    networks:
+      # - postgres
+      - todolist-postgres-network
+
+  pgadmin:
+    container_name: todolist-pgadmin
+    image: dpage/pgadmin4
+    ports:
+      - '8080:80'
+    volumes:
+      - /var/lib/pgadmin/data:/root/.pgadmin
+    env_file:
+      - .env
+    networks:
+      # - postgres
+      - pgadmin-network
+
+networks:
+  app-network:
+    driver: bridge
+  todolist-postgres-network:
+    driver: bridge
+  pgadmin-network:
+    driver: bridge
+
+volumes:
+  postgis-data:
+    driver: local

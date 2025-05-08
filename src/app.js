@@ -29,7 +29,7 @@ app.use(notFoundHandler);
 app.use(errorHandler);
 
 // Start the server
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 9090;
 app.listen(PORT, () => {
   console.log(`Server started on port ${PORT}`);
 });

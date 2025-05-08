@@ -1,12 +1,10 @@
-import userService from '../servisces/user.service.js';
+import db from '../utils/db.js';
 
 /**
- * Tạo dữ liệu người dùng mẫu
  * @returns {Promise<void>}
  */
 const seedUsers = async () => {
   try {
-    // Tạo một mảng dữ liệu người dùng giả
     const fakeUsers = [
       {
         name: 'Admin User',
@@ -60,20 +58,29 @@ const seedUsers = async () => {
       }
     ];
 
-    // Thêm từng người dùng vào service
     for (const user of fakeUsers) {
       try {
-        await userService.createUser(user);
-        console.log(`Đã tạo user: ${user.name} (${user.email})`);
+        const checkResult = await db.query('SELECT email FROM users WHERE email = $1', [user.email]);
+        
+        if (checkResult.rowCount > 0) {
+          console.log(`Skip user ${user.email}: Email already exists`);
+          continue;
+        }
+        
+        const result = await db.query(
+          'INSERT INTO users (name, email, password) VALUES ($1, $2, $3) RETURNING id',
+          [user.name, user.email, user.password]
+        );
+        
+        console.log(`Create user: ${user.name} (${user.email}) with ID: ${result.rows[0].id}`);
       } catch (error) {
-        // Bỏ qua nếu email đã tồn tại
-        console.log(`Bỏ qua user ${user.email}: ${error.message}`);
+        console.log(`Error create user ${user.email}: ${error.message}`);
       }
     }
 
-    console.log('Tạo dữ liệu người dùng giả thành công!');
+    console.log('Create users successfully');
   } catch (error) {
-    console.error('Lỗi khi tạo dữ liệu người dùng giả:', error);
+    console.error('Error create users:', error);
   }
 };
 
