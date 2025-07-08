@@ -15,12 +15,13 @@ import {
 const getAllUsers = async (req, res) => {
   try {
     // Extract query parameters (already validated by middleware)
-    const { page = 1, limit = 10 } = req.query;
+    const { page = 1, limit = 10, search = '' } = req.query;
 
     // Call service layer to get data
     const result = await getAllUsersService({
       page: parseInt(page),
       limit: parseInt(limit),
+      search: search,
     });
 
     // Return success response with data and pagination info

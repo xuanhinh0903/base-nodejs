@@ -3,21 +3,32 @@ import pool from '../utils/db.js';
 class UserModel {
   async getAllUsers(options = {}) {
     try {
-      const { page = 1, limit = 10 } = options;
+      const { page = 1, limit = 10, search = '' } = options;
 
       // Calculate offset for pagination
       const offset = (page - 1) * limit;
+
+      // Build WHERE clause for search if provided
+      let whereClause = '';
+      let params = [];
+
+      if (search && search.trim()) {
+        whereClause = 'WHERE name ILIKE $1 OR email ILIKE $1';
+        params = [`%${search.trim()}%`];
+      }
 
       const usersQuery = `
         SELECT 
           id, name, email, created_at, updated_at,
           COUNT(*) OVER() as total_count
         FROM users 
+        ${whereClause}
         ORDER BY created_at DESC
-        LIMIT $1 OFFSET $2
+        LIMIT $${params.length + 1} OFFSET $${params.length + 2}
       `;
 
-      const params = [limit, offset];
+      // Add pagination parameters
+      params.push(limit, offset);
       const result = await pool.query(usersQuery, params);
 
       // Get total count from first row (if exists)
