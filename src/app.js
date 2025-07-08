@@ -33,7 +33,7 @@ app.get('/', (req, res) => {
   res.json({
     message: 'Welcome to the Node.js API!',
     status: 'Server is running successfully',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 
@@ -43,7 +43,7 @@ app.use((err, req, res, next) => {
   console.error('Error occurred:', err.stack);
   res.status(500).json({
     error: 'Something went wrong!',
-    message: err.message
+    message: err.message,
   });
 });
 
@@ -52,7 +52,7 @@ app.use('*', (req, res) => {
   res.status(404).json({
     error: 'Route not found',
     message: `Cannot ${req.method} ${req.originalUrl}`,
-    availableRoutes: ['GET /', 'GET /health']
+    availableRoutes: ['GET /', 'GET /health'],
   });
 });
 

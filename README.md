@@ -42,19 +42,22 @@ base-nodejs/
 ### Setup Steps
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/xuanhinh0903/base-nodejs.git
    cd base-nodejs
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Environment Configuration**
-   
+
    Create a `.env` file in the root directory:
+
    ```env
    PORT=3000
    DB_USER=your_db_user
@@ -65,18 +68,21 @@ base-nodejs/
    ```
 
 4. **Database Setup**
-   
+
    Make sure your PostgreSQL database is running and accessible with the credentials specified in your `.env` file.
 
 ## 🚀 Running the Application
 
 ### Development Mode
+
 ```bash
 npm run dev
 ```
+
 This uses nodemon for automatic server restart on file changes.
 
 ### Production Mode
+
 ```bash
 npm start
 ```
@@ -86,21 +92,23 @@ The server will start on the port specified in your `.env` file (default: 3000).
 ## 📡 API Endpoints
 
 ### Base URL
+
 ```
 http://localhost:3000
 ```
 
 ### Available Routes
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/` | Welcome message and server status |
-| GET | `/users` | Get all users |
-| GET | `/users/:id` | Get user by ID |
+| Method | Endpoint     | Description                       |
+| ------ | ------------ | --------------------------------- |
+| GET    | `/`          | Welcome message and server status |
+| GET    | `/users`     | Get all users                     |
+| GET    | `/users/:id` | Get user by ID                    |
 
 ### Example Responses
 
 **GET /** - Welcome endpoint
+
 ```json
 {
   "message": "Welcome to the Node.js API!",
@@ -110,11 +118,13 @@ http://localhost:3000
 ```
 
 **GET /users** - Get all users
+
 ```
 Danh sách người dùng
 ```
 
 **GET /users/:id** - Get user by ID
+
 ```
 Chi tiết người dùng có ID: {id}
 ```
@@ -145,6 +155,7 @@ The application automatically tests the database connection on startup and logs 
 ## 📦 Dependencies
 
 ### Production Dependencies
+
 - `express` - Web framework
 - `pg` - PostgreSQL client
 - `dotenv` - Environment variable loader
@@ -152,6 +163,7 @@ The application automatically tests the database connection on startup and logs 
 - `helmet` - Security middleware
 
 ### Development Dependencies
+
 - `nodemon` - Development server with auto-restart
 
 ## 🧪 Testing
