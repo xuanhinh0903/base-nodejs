@@ -1,27 +1,28 @@
-// User Routes - Route definitions with middleware
+// User Routes - Route definitions with DTO validation middleware
 import express from 'express';
-const router = express.Router();
 
-// Import controller functions
 import {
   getAllUsers,
   getUserById,
   createUser,
 } from '../controllers/user.controller.js';
 
-// Import middleware
-import { validatePagination } from '../middleware/validation.middleware.js';
+import {
+  validateCreateUser,
+  validateUserId,
+} from '../validations/user.validation.js';
 
-// Public routes (no authentication required)
-router.post('/', createUser); // Register new user
+import { validatePagination } from '../validations/base.validation.js';
 
-// Protected routes (authentication required)
-router.get(
-  '/',
-  validatePagination, // Validate pagination parameters
-  getAllUsers // Get all users with pagination
-);
+const router = express.Router();
 
-router.get('/:id', getUserById); // Get user by ID
+// Get all users with pagination
+router.get('/', validatePagination(), getAllUsers);
+
+// Create new user
+router.post('/', validateCreateUser(), createUser);
+
+// Get user by ID
+router.get('/:id', validateUserId(), getUserById);
 
 export default router;

@@ -5,10 +5,8 @@ class UserModel {
     try {
       const { page = 1, limit = 10, search = '' } = options;
 
-      // Calculate offset for pagination
       const offset = (page - 1) * limit;
 
-      // Build WHERE clause for search if provided
       let whereClause = '';
       let params = [];
 
@@ -27,22 +25,19 @@ class UserModel {
         LIMIT $${params.length + 1} OFFSET $${params.length + 2}
       `;
 
-      // Add pagination parameters
       params.push(limit, offset);
       const result = await pool.query(usersQuery, params);
 
-      // Get total count from first row (if exists)
       const total =
         result.rows.length > 0 ? parseInt(result.rows[0].total_count) : 0;
 
-      // Calculate pagination info
       const totalPages = Math.ceil(total / limit);
       const hasNextPage = page < totalPages;
       const hasPrevPage = page > 1;
 
       return {
         users: result.rows.map(row => {
-          // Remove total_count from user objects
+          // eslint-disable-next-line no-unused-vars
           const { total_count, ...user } = row;
           return user;
         }),
