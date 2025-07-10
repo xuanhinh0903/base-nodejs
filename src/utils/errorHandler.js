@@ -76,31 +76,6 @@ export const handleServiceError = (error, res, operation = 'operation') => {
 };
 
 /**
- * Create a standardized success response
- * @param {Object} res - Express response object
- * @param {number} statusCode - HTTP status code (default: 200)
- * @param {string} message - Success message
- * @param {any} data - Response data
- */
-export const sendSuccessResponse = (
-  res,
-  statusCode = 200,
-  message,
-  data = null
-) => {
-  const response = {
-    success: true,
-    message,
-  };
-
-  if (data !== null) {
-    response.data = data;
-  }
-
-  return res.status(statusCode).json(response);
-};
-
-/**
  * Create a standardized error response
  * @param {Object} res - Express response object
  * @param {number} statusCode - HTTP status code

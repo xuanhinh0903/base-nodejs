@@ -1,81 +1,231 @@
-// User validation schemas - Centralized validation rules for user operations
-import { body, param } from 'express-validator';
+import * as yup from 'yup';
 
-/**
- * Validation schema for creating a new user
- * @returns {Array} Array of validation rules for user creation
- */
-export const validateCreateUser = () => [
-  body('name')
-    .notEmpty()
-    .withMessage('Name is required')
-    .isLength({ min: 2, max: 50 })
-    .withMessage('Name must be between 2 and 50 characters'),
+const baseUserSchema = yup.object({
+  name: yup
+    .string()
+    .required('Name is required')
+    .min(2, 'Name must be at least 2 characters')
+    .max(100, 'Name must not exceed 100 characters')
+    .trim(),
 
-  body('email')
-    .notEmpty()
-    .withMessage('Email is required')
-    .isEmail()
-    .withMessage('Invalid email address')
-    .normalizeEmail(),
+  email: yup
+    .string()
+    .required('Email is required')
+    .email('Invalid email address')
+    .max(255, 'Email must not exceed 255 characters')
+    .lowercase()
+    .trim(),
+});
 
-  body('password')
-    .notEmpty()
-    .withMessage('Password is required')
-    .isLength({ min: 8 })
-    .withMessage('Password must be at least 8 characters long')
-    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
-    .withMessage(
-      'Password must contain at least one uppercase letter, one lowercase letter, and one number',
-    ),
-];
+// Schema for creating a new user
+export const createUserSchema = baseUserSchema.shape({
+  name: baseUserSchema.fields.name.test(
+    'unique-name',
+    'User name already exists',
+    async function (_value) {
+      return true;
+    },
+  ),
 
-/**
- * Validation schema for updating user information
- * @returns {Array} Array of validation rules for user updates
- */
-export const validateUpdateUser = () => [
-  param('id')
-    .notEmpty()
-    .withMessage('User ID is required')
-    .isUUID()
-    .withMessage('Invalid user ID format'),
+  email: baseUserSchema.fields.email.test(
+    'unique-email',
+    'Email already exists',
+    async function (_value) {
+      return true;
+    },
+  ),
+  password: yup
+    .string()
+    .required('Password is required')
+    .min(8, 'Password must be at least 8 characters')
+    .max(100, 'Password must not exceed 100 characters')
+    .trim(),
+});
 
-  body('name')
-    .optional()
-    .isLength({ min: 2, max: 50 })
-    .withMessage('Name must be between 2 and 50 characters'),
+// Schema for updating a user
+export const updateUserSchema = baseUserSchema
+  .shape({
+    name: baseUserSchema.fields.name.optional(),
+    email: baseUserSchema.fields.email.optional(),
+  })
+  .test(
+    'at-least-one-field',
+    'At least one field must be provided for update',
+    function (value) {
+      return value.name || value.email;
+    },
+  );
 
-  body('email')
-    .optional()
-    .isEmail()
-    .withMessage('Invalid email address')
-    .normalizeEmail(),
-];
+// Schema for user ID validation
+export const userIdSchema = yup.object({
+  id: yup
+    .number()
+    .required('User ID is required')
+    .positive('ID must be a positive number')
+    .integer('ID must be an integer'),
+});
 
-/**
- * Validation schema for user ID parameter
- * @returns {Array} Array of validation rules for user ID
- */
-export const validateUserId = () => [
-  param('id')
-    .notEmpty()
-    .withMessage('User ID is required')
-    .isUUID()
-    .withMessage('Invalid user ID format'),
-];
+// Schema for pagination and search
+export const userListSchema = yup.object({
+  page: yup
+    .number()
+    .positive('Page must be a positive number')
+    .integer('Page must be an integer')
+    .default(1),
 
-/**
- * Validation schema for user login
- * @returns {Array} Array of validation rules for user login
- */
-export const validateUserLogin = () => [
-  body('email')
-    .notEmpty()
-    .withMessage('Email is required')
-    .isEmail()
-    .withMessage('Invalid email address')
-    .normalizeEmail(),
+  limit: yup
+    .number()
+    .positive('Limit must be a positive number')
+    .integer('Limit must be an integer')
+    .min(1, 'Minimum limit is 1')
+    .max(100, 'Maximum limit is 100')
+    .default(10),
 
-  body('password').notEmpty().withMessage('Password is required'),
-];
+  search: yup
+    .string()
+    .max(100, 'Search keyword must not exceed 100 characters')
+    .trim()
+    .optional(),
+});
+
+// Schema for partial user data (used in filters)
+export const userFilterSchema = yup.object({
+  name: yup
+    .string()
+    .max(100, 'Name must not exceed 100 characters')
+    .trim()
+    .optional(),
+
+  email: yup
+    .string()
+    .email('Invalid email address')
+    .max(255, 'Email must not exceed 255 characters')
+    .lowercase()
+    .trim()
+    .optional(),
+});
+
+// Schema for user login
+export const loginSchema = yup.object({
+  email: yup
+    .string()
+    .required('Email is required')
+    .email('Invalid email address')
+    .lowercase()
+    .trim(),
+
+  password: yup
+    .string()
+    .required('Password is required')
+    .min(1, 'Password cannot be empty'),
+});
+
+// Validation helper functions
+export const validateUser = {
+  // Validate user creation data
+  create: async data => {
+    try {
+      const validatedData = await createUserSchema.validate(data, {
+        abortEarly: false,
+        stripUnknown: true,
+      });
+      return { isValid: true, data: validatedData, errors: null };
+    } catch (error) {
+      return {
+        isValid: false,
+        data: null,
+        errors: error.errors,
+      };
+    }
+  },
+
+  // Validate user update data
+  update: async data => {
+    try {
+      const validatedData = await updateUserSchema.validate(data, {
+        abortEarly: false,
+        stripUnknown: true,
+      });
+      return { isValid: true, data: validatedData, errors: null };
+    } catch (error) {
+      return {
+        isValid: false,
+        data: null,
+        errors: error.errors,
+      };
+    }
+  },
+
+  // Validate user ID
+  id: async id => {
+    try {
+      const validatedData = await userIdSchema.validate(
+        { id },
+        {
+          abortEarly: false,
+          stripUnknown: true,
+        },
+      );
+      return { isValid: true, data: validatedData, errors: null };
+    } catch (error) {
+      return {
+        isValid: false,
+        data: null,
+        errors: error.errors,
+      };
+    }
+  },
+
+  // Validate list parameters
+  list: async params => {
+    try {
+      const validatedData = await userListSchema.validate(params, {
+        abortEarly: false,
+        stripUnknown: true,
+      });
+      return { isValid: true, data: validatedData, errors: null };
+    } catch (error) {
+      return {
+        isValid: false,
+        data: null,
+        errors: error.errors,
+      };
+    }
+  },
+
+  // Validate filter parameters
+  // filter: async params => {
+  //   try {
+  //     const validatedData = await userFilterSchema.validate(params, {
+  //       abortEarly: false,
+  //       stripUnknown: true,
+  //     });
+  //     return { isValid: true, data: validatedData, errors: null };
+  //   } catch (error) {
+  //     return {
+  //       isValid: false,
+  //       data: null,
+  //       errors: error.errors,
+  //     };
+  //   }
+  // },
+
+  // Validate login data
+  login: async data => {
+    try {
+      const validatedData = await loginSchema.validate(data, {
+        abortEarly: false,
+        stripUnknown: true,
+      });
+      return { isValid: true, data: validatedData, errors: null };
+    } catch (error) {
+      return {
+        isValid: false,
+        data: null,
+        errors: error.errors,
+      };
+    }
+  },
+};
+
+export default validateUser;

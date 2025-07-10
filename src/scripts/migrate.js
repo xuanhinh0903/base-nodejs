@@ -37,7 +37,7 @@ const runMigrations = async () => {
     console.log('🚀 Starting database migrations...');
 
     // List of migrations to run in order
-    const migrations = ['create-users-table.sql'];
+    const migrations = ['create-users-table.sql', 'add-password-column.sql'];
 
     // Run each migration
     for (const migration of migrations) {
@@ -61,7 +61,7 @@ const runMigrations = async () => {
     console.log('\n📋 Users table structure:');
     tableInfo.rows.forEach(row => {
       console.log(
-        `   ${row.column_name} (${row.data_type}) ${row.is_nullable === 'NO' ? 'NOT NULL' : 'NULL'}`
+        `   ${row.column_name} (${row.data_type}) ${row.is_nullable === 'NO' ? 'NOT NULL' : 'NULL'}`,
       );
     });
   } catch (error) {

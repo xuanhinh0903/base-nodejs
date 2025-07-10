@@ -78,14 +78,30 @@ class UserModel {
    */
   async createUser(userData) {
     try {
-      const { name, email } = userData;
+      const { name, email, password } = userData;
       const query = `
-        INSERT INTO users (name, email)
-        VALUES ($1, $2)
+        INSERT INTO users (name, email, password)
+        VALUES ($1, $2, $3)
         RETURNING id, name, email, created_at, updated_at
       `;
-      const result = await pool.query(query, [name, email]);
+      const result = await pool.query(query, [name, email, password]);
       return result.rows[0];
+    } catch (error) {
+      throw new Error(`Database error: ${error.message}`);
+    }
+  }
+
+  /**
+   * Get user by email from database (for authentication)
+   * @param {string} email - User email
+   * @returns {Promise<Object|null>} - User data or null
+   */
+  async getUserByEmail(email) {
+    try {
+      const query =
+        'SELECT id, name, email, password, created_at, updated_at FROM users WHERE email = $1';
+      const result = await pool.query(query, [email.toLowerCase()]);
+      return result.rows[0] || null;
     } catch (error) {
       throw new Error(`Database error: ${error.message}`);
     }

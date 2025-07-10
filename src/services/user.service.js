@@ -1,6 +1,7 @@
 // User Service - Business Logic Layer
 // Handles all business logic related to users
 import userModel from '../models/user.model.js';
+import bcrypt from 'bcrypt';
 
 const getAllUsers = async (options = {}) => {
   // Extract pagination and search options
@@ -28,25 +29,66 @@ const getUserById = async id => {
 
 const createUser = async userData => {
   // Business logic: Validate required fields
-  const { name, email } = userData;
+  const { name, email, password } = userData;
 
-  if (!name || !email) {
-    throw new Error('Name and email are required');
-  }
-
-  // Business logic: Validate email format
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
-    throw new Error('Invalid email format');
-  }
+  // Hash password with bcrypt (salt rounds = 12)
+  const saltRounds = 12;
+  const hashedPassword = await bcrypt.hash(password.trim(), saltRounds);
 
   // Call model layer to save user to database
   const newUser = await userModel.createUser({
     name: name.trim(),
     email: email.toLowerCase().trim(),
+    password: hashedPassword,
   });
 
   return newUser;
 };
 
-export { getAllUsers, getUserById, createUser };
+/**
+ * Verify user password
+ * @param {string} plainPassword - Plain text password
+ * @param {string} hashedPassword - Hashed password from database
+ * @returns {Promise<boolean>} - True if password matches
+ */
+const verifyPassword = async (plainPassword, hashedPassword) => {
+  try {
+    return await bcrypt.compare(plainPassword, hashedPassword);
+  } catch (error) {
+    throw new Error(`Password verification error: ${error.message}`);
+  }
+};
+
+/**
+ * Authenticate user with email and password
+ * @param {string} email - User email
+ * @param {string} password - User password
+ * @returns {Promise<Object|null>} - User data if authenticated, null otherwise
+ */
+const authenticateUser = async (email, password) => {
+  try {
+    // Get user by email (includes password)
+    const user = await userModel.getUserByEmail(email);
+
+    if (!user) return null;
+
+    // Verify password
+    const isPasswordValid = await verifyPassword(password, user.password);
+
+    if (!isPasswordValid) return null;
+
+    // Return user data without password
+    const { password: _, ...userWithoutPassword } = user;
+    return userWithoutPassword;
+  } catch (error) {
+    throw new Error(`Authentication error: ${error.message}`);
+  }
+};
+
+export {
+  getAllUsers,
+  getUserById,
+  createUser,
+  authenticateUser,
+  verifyPassword,
+};
