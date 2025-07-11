@@ -8,7 +8,7 @@ import { specs } from './config/swagger.js';
 import userRoutes from './routes/user.route.js';
 import authRoutes from './routes/auth.route.js';
 import profileRoutes from './routes/profile.route.js';
-import shopRoutes from './routes/shop.route.js';
+import productRoute from './routes/product.route.js';
 
 // Create Express application instance
 const app = express();
@@ -37,7 +37,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
-app.use('/api/shop', shopRoutes);
+app.use('/api/shop', productRoute);
 
 // Basic route for testing
 app.get('/', (req, res) => {
