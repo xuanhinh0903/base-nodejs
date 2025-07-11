@@ -1,214 +1,205 @@
 # Node.js Basic API
 
-A simple and clean Node.js REST API built with Express.js and PostgreSQL. This project demonstrates a well-structured backend application with proper separation of concerns.
+#Guide to installing packages for blockchain development
 
-## 🚀 Features
+## Packages cần cài đặt cho Local Development
 
-- **Express.js** - Fast, unopinionated web framework
-- **PostgreSQL** - Robust relational database
-- **ES6 Modules** - Modern JavaScript import/export syntax
-- **Environment Configuration** - Centralized environment variable management
-- **Security Middleware** - Helmet for security headers
-- **CORS Support** - Cross-origin resource sharing enabled
-- **Clean Architecture** - Organized folder structure with separation of concerns
+### 1. Core Blockchain Packages (Bắt buộc)
 
-## 📁 Project Structure
-
-```
-base-nodejs/
-├── src/
-│   ├── app.js              # Main application entry point
-│   ├── config/
-│   │   └── env.js          # Environment configuration
-│   ├── controllers/
-│   │   └── user.controller.js  # User business logic
-│   ├── routes/
-│   │   └── user.route.js   # User API routes
-│   ├── middleware/          # Custom middleware (empty)
-│   └── utils/
-│       └── db.js           # Database connection
-├── package.json
-└── README.md
-```
-
-## 🛠️ Installation
-
-### Prerequisites
-
-- Node.js (v14 or higher)
-- PostgreSQL database
-- npm or yarn package manager
-
-### Setup Steps
-
-1. **Clone the repository**
-
-   ```bash
-   git clone https://github.com/xuanhinh0903/base-nodejs.git
-   cd base-nodejs
-   ```
-
-2. **Install dependencies**
-
-   ```bash
-   npm install
-   ```
-
-3. **Environment Configuration**
-
-   Create a `.env` file in the root directory:
-
-   ```env
-   PORT=3000
-   DB_USER=your_db_user
-   DB_HOST=localhost
-   DB_NAME=your_database_name
-   DB_PASSWORD=your_db_password
-   DB_PORT=5432
-   ```
-
-4. **Database Setup**
-
-   Make sure your PostgreSQL database is running and accessible with the credentials specified in your `.env` file.
-
-## 🚀 Running the Application
-
-### Development Mode
+#### `ethers`
 
 ```bash
-npm run dev
+npm install ethers
 ```
 
-This uses nodemon for automatic server restart on file changes.
+**Lý do:** Thư viện chính để tương tác với blockchain local
+**Sử dụng:** Kết nối Hardhat network, deploy contracts, gửi transactions
 
-### Production Mode
+#### `@openzeppelin/contracts`
 
 ```bash
-npm start
+<code_block_to_apply_changes_from>
 ```
 
-The server will start on the port specified in your `.env` file (default: 3000).
+**Lý do:** Thư viện chuẩn cho NFT smart contracts
+**Sử dụng:** ERC-721, ERC-1155, Access Control
 
-## 📡 API Endpoints
+### 2. Hardhat Development Tools (Bắt buộc)
 
-### Base URL
+#### `@nomicfoundation/hardhat-ethers`
 
+```bash
+npm install @nomicfoundation/hardhat-ethers
 ```
-http://localhost:3000
+
+**Lý do:** Tích hợp ethers với Hardhat
+**Sử dụng:** Testing, deployment, console interaction
+
+### 3. Optional Packages (Khuyến nghị)
+
+#### `@nomicfoundation/hardhat-verify`
+
+```bash
+npm install @nomicfoundation/hardhat-verify
 ```
 
-### Available Routes
+**Lý do:** Verify contracts (chỉ cần khi deploy lên testnet)
+**Sử dụng:** Verify smart contracts trên Etherscan
 
-| Method | Endpoint     | Description                       |
-| ------ | ------------ | --------------------------------- |
-| GET    | `/`          | Welcome message and server status |
-| GET    | `/users`     | Get all users                     |
-| GET    | `/users/:id` | Get user by ID                    |
+#### `ipfs-http-client`
 
-### Example Responses
+```bash
+npm install ipfs-http-client
+```
 
-**GET /** - Welcome endpoint
+**Lý do:** Lưu trữ metadata NFT
+**Sử dụng:** Upload metadata lên IPFS
 
-```json
-{
-  "message": "Welcome to the Node.js API!",
-  "status": "Server is running successfully",
-  "timestamp": "2024-01-01T12:00:00.000Z"
+## Lệnh cài đặt tất cả cho Local:
+
+```bash
+# Cài đặt core packages cho local development
+npm install ethers @openzeppelin/contracts @nomicfoundation/hardhat-ethers
+
+# Cài đặt optional packages
+npm install @nomicfoundation/hardhat-verify ipfs-http-client
+```
+
+## Kiểm tra sau khi cài đặt:
+
+### 1. Kiểm tra Hardhat Network
+
+```bash
+# Khởi động local blockchain
+npx hardhat node
+```
+
+### 2. Kiểm tra ethers connection
+
+```javascript
+// test-local.js
+import { ethers } from 'ethers';
+
+const provider = new ethers.JsonRpcProvider('http://127.0.0.1:8545');
+const blockNumber = await provider.getBlockNumber();
+console.log('Connected to local network, block:', blockNumber);
+```
+
+### 3. Kiểm tra OpenZeppelin
+
+```javascript
+// test-contracts.js
+import { ethers } from 'ethers';
+
+// Test ERC-721
+const ERC721 = await ethers.getContractFactory('ERC721');
+console.log('OpenZeppelin contracts loaded successfully');
+```
+
+## Cấu hình cho Local Development:
+
+### 1. Cập nhật hardhat.config.cjs
+
+```javascript
+require('@nomicfoundation/hardhat-ethers');
+require('dotenv').config();
+
+module.exports = {
+  solidity: '0.8.28',
+  networks: {
+    // Local network
+    hardhat: {
+      chainId: 1337,
+      accounts: {
+        mnemonic:
+          'test test test test test test test test test test test test junk',
+        count: 10,
+      },
+    },
+    // Local network với port khác
+    localhost: {
+      url: 'http://127.0.0.1:8545',
+      chainId: 1337,
+    },
+  },
+};
+```
+
+### 2. Tạo script test local
+
+```javascript
+// scripts/test-local.js
+const hre = require('hardhat');
+
+async function main() {
+  console.log('🧪 Testing local setup...');
+
+  // Get signers
+  const [owner, buyer] = await hre.ethers.getSigners();
+  console.log('✅ Signers loaded:', owner.address, buyer.address);
+
+  // Test network connection
+  const blockNumber = await hre.ethers.provider.getBlockNumber();
+  console.log('✅ Connected to local network, block:', blockNumber);
+
+  console.log('🎉 Local setup is working!');
 }
+
+main()
+  .then(() => process.exit(0))
+  .catch(error => {
+    console.error('❌ Test failed:', error);
+    process.exit(1);
+  });
 ```
 
-**GET /users** - Get all users
+## Thứ tự thực hiện cho Local:
 
-```
-Danh sách người dùng
-```
-
-**GET /users/:id** - Get user by ID
-
-```
-Chi tiết người dùng có ID: {id}
-```
-
-## 🔧 Configuration
-
-### Environment Variables
-
-The application uses a centralized configuration system in `src/config/env.js`:
-
-- `PORT` - Server port (default: 3000)
-- `DB_USER` - PostgreSQL username
-- `DB_HOST` - Database host (default: localhost)
-- `DB_NAME` - Database name
-- `DB_PASSWORD` - Database password
-- `DB_PORT` - Database port (default: 5432)
-
-### Database Connection
-
-The application automatically tests the database connection on startup and logs the result to the console.
-
-## 🛡️ Security Features
-
-- **Helmet.js** - Security headers for protection against common vulnerabilities
-- **CORS** - Cross-origin resource sharing configuration
-- **Input Validation** - Basic request validation (can be extended)
-
-## 📦 Dependencies
-
-### Production Dependencies
-
-- `express` - Web framework
-- `pg` - PostgreSQL client
-- `dotenv` - Environment variable loader
-- `cors` - Cross-origin resource sharing
-- `helmet` - Security middleware
-
-### Development Dependencies
-
-- `nodemon` - Development server with auto-restart
-
-## 🧪 Testing
-
-Currently, no tests are configured. To add testing:
+### Bước 1: Cài đặt packages
 
 ```bash
-npm install --save-dev jest supertest
+npm install ethers @openzeppelin/contracts @nomicfoundation/hardhat-ethers
 ```
 
-## 🔄 Development Workflow
+### Bước 2: Cấu hình Hardhat
 
-1. Make changes to your code
-2. The development server will automatically restart (if using `npm run dev`)
-3. Test your endpoints using a tool like Postman or curl
-4. Commit your changes
+```bash
+# Cập nhật hardhat.config.cjs
+```
 
-## 📝 Contributing
+### Bước 3: Khởi động local network
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+```bash
+npx hardhat node
+```
 
-## 📄 License
+### Bước 4: Test setup
 
-This project is licensed under the ISC License.
+```bash
+npx hardhat run scripts/test-local.js --network localhost
+```
 
-## 🤝 Support
+### Bước 5: Deploy contracts
 
-If you encounter any issues or have questions:
+```bash
+npx hardhat run scripts/deploy.js --network localhost
+```
 
-- Create an issue on GitHub: [https://github.com/xuanhinh0903/base-nodejs/issues](https://github.com/xuanhinh0903/base-nodejs/issues)
-- Check the project homepage: [https://github.com/xuanhinh0903/base-nodejs#readme](https://github.com/xuanhinh0903/base-nodejs#readme)
+## Lưu ý quan trọng cho Local:
 
-## 🎯 Next Steps
+1. **Không cần testnet ETH** - Hardhat tạo sẵn accounts với 10000 ETH
+2. **Không cần gas fees** - Local network không tính phí
+3. **Reset mỗi lần restart** - Dữ liệu sẽ mất khi restart
+4. **Fast transactions** - Giao dịch confirm ngay lập tức
+5. **Easy debugging** - Có thể debug smart contracts dễ dàng
 
-This is a basic setup that can be extended with:
+Bạn có muốn tôi bắt đầu với việc cài đặt các packages này không?
 
-- **Authentication & Authorization** - JWT tokens, user sessions
-- **Input Validation** - Joi or express-validator
-- **Error Handling** - Custom error classes and middleware
-- **Logging** - Winston or Morgan for request logging
-- **Testing** - Unit and integration tests
-- **API Documentation** - Swagger/OpenAPI documentation
-- **Rate Limiting** - Express-rate-limit
-- **File Upload** - Multer for file handling
+DB_USER=admin
+DB_HOST=localhost
+DB_NAME=nodejs-basic
+DB_PASSWORD=123456
+DB_PORT=5432
+PORT=3000
+INFURA_API_KEY=c0fc408825f945e191a16b7cf93e093c
+PRIVATE_KEY=+jQ8QDbqNKjPqbPO/6vCNAgV2vKZJtfV7xycheP0nSgm3ExqDRWIwQ
