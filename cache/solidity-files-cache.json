@@ -611,8 +611,8 @@
       ]
     },
     "/Users/admin/Projects/base-nodejs/src/contracts/ClothingShop.sol": {
-      "lastModificationDate": 1752208624891,
-      "contentHash": "e0020116cfec979ce5df160cdbe05acf",
+      "lastModificationDate": 1752468907364,
+      "contentHash": "59e631394a8865073a0c7f50b678fd66",
       "sourceName": "src/contracts/ClothingShop.sol",
       "solcConfig": {
         "version": "0.8.28",

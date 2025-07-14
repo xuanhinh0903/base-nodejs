@@ -1,8 +1,10 @@
+import redisWrapper from '../config/redis.js';
 import blockchainService from '../services/blockchain.service.js';
+import productService from '../services/product.service.js';
 
 // Load contracts khi khởi động
-const NFT_ADDRESS = '0x68B1D87F95878fE05B998F19b66F4baba5De1aed';
-const SHOP_ADDRESS = '0x3Aa5ebB10DC797CAC828524e59A333d0A371443c';
+const NFT_ADDRESS = '0x322813Fd9A801c5507c9de605d63CEA4f2CE6c44';
+const SHOP_ADDRESS = '0xa85233C63b9Ee964Add6F2cffe00Fd84eb32338f';
 
 // Initialize blockchain service
 await blockchainService.loadContracts(NFT_ADDRESS, SHOP_ADDRESS);
@@ -26,6 +28,28 @@ export const addProduct = async (req, res) => {
       price,
       imageUrl,
       category,
+      stock: parseInt(stock),
+    });
+
+    // Add to cache after successful blockchain transaction
+    if (!result.success) {
+      return res.status(400).json({
+        success: false,
+        message: 'Failed to add product',
+      });
+    }
+    const keys = await redisWrapper.keys('products:page:*');
+
+    await Promise.all(keys.map(key => redisWrapper.del(key)));
+
+    await productService.addProductToCache({
+      productId: result.productId,
+      name,
+      description,
+      price: parseFloat(price),
+      imageUrl,
+      category,
+      isAvailable: true,
       stock: parseInt(stock),
     });
 
@@ -56,7 +80,14 @@ export const getProduct = async (req, res) => {
       });
     }
 
-    const product = await blockchainService.getProduct(productId);
+    const product = await productService.getProductById(productId);
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: 'Product not found',
+      });
+    }
 
     res.status(200).json({
       success: true,
@@ -76,20 +107,29 @@ export const getProduct = async (req, res) => {
 export const purchaseProduct = async (req, res) => {
   try {
     const { productId } = req.params;
-    const { buyerAddress, price } = req.body;
+    const { price } = req.body;
 
-    if (!productId || !buyerAddress || !price) {
+    if (!productId || !price) {
       return res.status(400).json({
         success: false,
-        message: 'Product ID, buyer address, and price are required',
+        message: 'Product ID and price are required',
       });
     }
 
     const result = await blockchainService.purchaseProduct(
       productId,
-      buyerAddress,
+      req.user.address,
       price,
     );
+
+    // Update stock in cache after successful purchase
+    if (result.success) {
+      // Get current product to update stock
+      const product = await productService.getProductById(productId);
+      if (product && product.stock > 0) {
+        await productService.updateProductStock(productId, product.stock - 1);
+      }
+    }
 
     res.status(200).json({
       success: true,
@@ -162,20 +202,108 @@ export const getUserNFTs = async (req, res) => {
   }
 };
 
-// Get all products
+// Get all products with pagination (OPTIMIZED with caching)
 export const getAllProducts = async (req, res) => {
   try {
-    const products = await blockchainService.getAllProducts();
+    // Get pagination parameters from query
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const search = req.query.search || '';
+    const category = req.query.category || '';
+
+    // Validate pagination parameters
+    if (page < 1 || limit < 1 || limit > 100) {
+      return res.status(400).json({
+        success: false,
+        message:
+          'Invalid pagination parameters. Page must be >= 1, limit must be between 1-100',
+      });
+    }
+    // Call to blockchain service
+    // const offset = (page - 1) * limit;
+
+    // const products = await blockchainService.getAllProducts(limit, offset);
+
+    // Calculate pagination info
+    // const totalProducts = await blockchainService.getTotalProducts();
+    // const totalPages = Math.ceil(totalProducts / limit);
+    // const hasNextPage = page < totalPages;
+    // const hasPrevPage = page > 1;
+
+    // res.status(200).json({
+    //   success: true,
+    //   data: products,
+    //   pagination: {
+    //     currentPage: page,
+    //     totalPages,
+    //     totalProducts,
+    //     limit,
+    //     hasNextPage,
+    //     hasPrevPage,
+    //     nextPage: hasNextPage ? page + 1 : null,
+    //     prevPage: hasPrevPage ? page - 1 : null,
+    //   },
+    // });
+
+    // Use product service with caching strategy
+    const result = await productService.getAllProducts({
+      page,
+      limit,
+      search,
+      category,
+    });
+
+    // Cache in Redis if available
+    if (redisWrapper.isConnected()) {
+      const cacheKey = `products:page:${page}:limit:${limit}:search:${search}:category:${category}`;
+      await redisWrapper.setEx(cacheKey, 300, JSON.stringify(result.products)); // 5 minutes cache
+    }
 
     res.status(200).json({
       success: true,
-      data: products,
+      data: result.products,
+      pagination: result.pagination,
     });
   } catch (error) {
     console.error('Error getting all products:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to get all products',
+      error: error.message,
+    });
+  }
+};
+
+export const deleteProductController = async (req, res) => {
+  try {
+    const { productId } = req.params;
+
+    if (!productId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Product ID is required',
+      });
+    }
+
+    const result = await blockchainService.deleteProductBlockchain(productId);
+
+    // Remove from cache after successful blockchain transaction
+    if (result.success) {
+      const keys = await redisWrapper.keys('products:page:*');
+      await productService.removeProductFromCache(productId);
+      await Promise.all(keys.map(key => redisWrapper.del(key)));
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Product deleted successfully',
+      data: result,
+    });
+  } catch (error) {
+    console.error('Error deleting product:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to delete product',
       error: error.message,
     });
   }

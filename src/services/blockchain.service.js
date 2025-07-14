@@ -1,5 +1,6 @@
 import { ethers } from 'ethers';
 import { createRequire } from 'module';
+import pool from '../utils/db.js';
 const require = createRequire(import.meta.url);
 const ClothingNFT = require('../../artifacts/src/contracts/ClothingNFT.sol/ClothingNFT.json');
 const ClothingShop = require('../../artifacts/src/contracts/ClothingShop.sol/ClothingShop.json');
@@ -114,6 +115,24 @@ class BlockchainService {
     }
   }
 
+  async deleteProductBlockchain(productId) {
+    try {
+      const tx = await this.shopContract.deleteProduct(productId);
+      const receipt = await tx.wait();
+      if (receipt.status === 0) {
+        throw new Error('Transaction failed');
+      }
+      console.log('✅ Product deleted successfully');
+      return {
+        success: true,
+        transactionHash: tx.hash,
+      };
+    } catch (error) {
+      console.error('❌ Failed to delete product:', error);
+      throw error;
+    }
+  }
+
   // Purchase product
   async purchaseProduct(productId, buyerAddress, price) {
     try {
@@ -212,6 +231,7 @@ class BlockchainService {
             userNFTs.push(nftInfo);
           }
         } catch (error) {
+          console.log('🚀 ~ BlockchainService ~ getUserNFTs ~ error:', error);
           // Skip if token doesn't exist
           continue;
         }
@@ -224,24 +244,32 @@ class BlockchainService {
     }
   }
 
-  // Get all products
-  async getAllProducts() {
+  // Get all products with pagination
+  async getAllProducts(limit = 10, offset = 0) {
     try {
-      const productIds = await this.shopContract.getAllProductIds();
+      // Get product IDs by page from blockchain
+      const productIds = await this.shopContract.getProductIdsByPage(
+        offset,
+        limit,
+      );
+
       const products = [];
 
       for (const productId of productIds) {
         try {
           const product = await this.shopContract.getProduct(productId);
+          const categoryTypeCode = product.category;
+          const categoryName = await this.getCategoryName(categoryTypeCode);
+
           products.push({
             productId: productId.toString(),
             name: product.name,
             description: product.description,
             price: ethers.formatEther(product.price),
             imageUrl: product.imageUrl,
-            category: product.category,
+            category: categoryName,
             isAvailable: product.isAvailable,
-            stock: product.stock.toString(),
+            stock: Number(product.stock),
           });
         } catch (error) {
           console.error(`Failed to get product ${productId}:`, error);
@@ -253,6 +281,33 @@ class BlockchainService {
     } catch (error) {
       console.error('❌ Failed to get all products:', error);
       throw error;
+    }
+  }
+
+  // Get total number of products
+  async getTotalProducts() {
+    try {
+      const productIds = await this.shopContract.getAllProductIds();
+      return productIds.length;
+    } catch (error) {
+      console.error('❌ Failed to get total products:', error);
+      throw error;
+    }
+  }
+
+  async getCategoryName(typeCode) {
+    try {
+      const result = await pool.query(
+        'SELECT name FROM categories WHERE type_code = $1',
+        [typeCode],
+      );
+      if (result.rows.length > 0) {
+        return result.rows[0].name;
+      }
+      return 'Unknown Category';
+    } catch (error) {
+      console.error('❌ Failed to get category name:', error);
+      return 'Unknown Category'; // Return default instead of throwing
     }
   }
 }

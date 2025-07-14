@@ -26,23 +26,6 @@ export const authenticateToken = (req, res, next) => {
     // Verify token
     jwt.verify(token, JWT_SECRET, (err, decoded) => {
       if (err) {
-        // Handle different types of JWT errors
-        if (err.name === 'TokenExpiredError') {
-          return res.status(401).json({
-            success: false,
-            error: 'Token Expired',
-            message: 'Access token has expired. Please login again.',
-          });
-        }
-
-        if (err.name === 'JsonWebTokenError') {
-          return res.status(403).json({
-            success: false,
-            error: 'Invalid Token',
-            message: 'Invalid access token. Please provide a valid token.',
-          });
-        }
-
         return res.status(403).json({
           success: false,
           error: 'Token Verification Failed',

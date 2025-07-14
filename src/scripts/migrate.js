@@ -37,7 +37,11 @@ const runMigrations = async () => {
     console.log('🚀 Starting database migrations...');
 
     // List of migrations to run in order
-    const migrations = ['create-users-table.sql', 'add-password-column.sql'];
+    const migrations = [
+      'create-users-table.sql',
+      'add-password-column.sql',
+      'create-table-category.sql',
+    ];
 
     // Run each migration
     for (const migration of migrations) {

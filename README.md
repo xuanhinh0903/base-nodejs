@@ -203,3 +203,65 @@ DB_PORT=5432
 PORT=3000
 INFURA_API_KEY=c0fc408825f945e191a16b7cf93e093c
 PRIVATE_KEY=+jQ8QDbqNKjPqbPO/6vCNAgV2vKZJtfV7xycheP0nSgm3ExqDRWIwQ
+
+## Database Seeding
+
+### Seeding Users
+
+To populate the database with sample user data:
+
+```bash
+npm run seed
+```
+
+This will create 20 sample users with realistic names and emails.
+
+### Seeding Categories
+
+To populate the database with clothing categories:
+
+```bash
+npm run seed:categories
+```
+
+This will create 15 clothing categories including:
+
+- T-Shirts, Tops, Bottoms, Dresses
+- Outerwear, Activewear, Accessories
+- Footwear, Underwear, Swimwear
+- Formal Wear, Casual Wear, Vintage
+- Streetwear, Luxury
+
+### Database Setup Order
+
+1. **Run migrations first:**
+
+   ```bash
+   npm run migrate
+   ```
+
+2. **Then seed the database:**
+   ```bash
+   npm run seed        # For users
+   npm run seed:categories  # For categories
+   ```
+
+### Category Types
+
+The categories use the following type codes:
+
+- 1 = T-SHIRT
+- 2 = TOP
+- 3 = BOTTOM
+- 4 = DRESS
+- 5 = OUTERWEAR
+- 6 = ACTIVEWEAR
+- 7 = ACCESSORIES
+- 8 = FOOTWEAR
+- 9 = UNDERWEAR
+- 10 = SWIMWEAR
+- 11 = FORMAL WEAR
+- 12 = CASUAL WEAR
+- 13 = VINTAGE
+- 14 = STREETWEAR
+- 15 = LUXURY

@@ -36,7 +36,7 @@ const getAllUsers = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: 'Users retrieved successfully',
-      users: result.users,
+      data: result.users,
       pagination: result.pagination,
     });
   } catch (error) {
@@ -60,7 +60,7 @@ const getUserById = async (req, res) => {
         success: false,
         error: 'Validation Error',
         message: 'Invalid user ID',
-        details: validation.errors,
+        data: validation.errors,
       });
     }
 
@@ -79,7 +79,7 @@ const getUserById = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: 'User retrieved successfully',
-      user,
+      data: user,
     });
   } catch (error) {
     return handleServiceError(error, res, 'getUserById');
@@ -110,7 +110,7 @@ const getCurrentUserProfile = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: 'User profile retrieved successfully',
-      user: {
+      data: {
         id: user.id,
         name: user.name,
         email: user.email,
@@ -141,7 +141,7 @@ const updateCurrentUserProfile = async (req, res) => {
         success: false,
         error: 'Validation Error',
         message: 'Invalid update data',
-        details: validation.errors,
+        data: validation.errors,
       });
     }
 
@@ -174,7 +174,7 @@ const createUser = async (req, res) => {
         success: false,
         error: 'Validation Error',
         message: 'Invalid user data',
-        details: validation.errors,
+        data: validation.errors,
       });
     }
 
