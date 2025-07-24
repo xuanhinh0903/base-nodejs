@@ -5,12 +5,7 @@ import helmet from 'helmet';
 import swaggerUi from 'swagger-ui-express';
 import { PORT } from './config/env.js';
 import { specs } from './config/swagger.js';
-import userRoutes from './routes/user.route.js';
-import authRoutes from './routes/auth.route.js';
-import profileRoutes from './routes/profile.route.js';
-import productRoute from './routes/product.route.js';
-import transactionRoute from './routes/transaction.route.js';
-import uploadRoute from './routes/upload.route.js';
+
 // Create Express application instance
 const app = express();
 
@@ -35,12 +30,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 
 // API routes
-app.use('/api/users', userRoutes);
-app.use('/api/auth', authRoutes);
-app.use('/api/profile', profileRoutes);
-app.use('/api/shop', productRoute);
-app.use('/api/transactions', transactionRoute);
-app.use('/api/upload', uploadRoute);
+
 // Basic route for testing
 app.get('/', (req, res) => {
   res.json({
