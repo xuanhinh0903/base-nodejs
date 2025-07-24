@@ -3,8 +3,8 @@ import blockchainService from '../services/blockchain.service.js';
 import productService from '../services/product.service.js';
 
 // Load contracts khi khởi động
-const NFT_ADDRESS = '0x322813Fd9A801c5507c9de605d63CEA4f2CE6c44';
-const SHOP_ADDRESS = '0xa85233C63b9Ee964Add6F2cffe00Fd84eb32338f';
+const NFT_ADDRESS = '0x8A791620dd6260079BF849Dc5567aDC3F2FdC318';
+const SHOP_ADDRESS = '0x610178dA211FEF7D417bC0e6FeD39F05609AD788';
 
 // Initialize blockchain service
 await blockchainService.loadContracts(NFT_ADDRESS, SHOP_ADDRESS);
@@ -116,25 +116,86 @@ export const purchaseProduct = async (req, res) => {
       });
     }
 
+    // First, try to get product from cache/database
+    let product = await productService.getProductById(productId);
+
+    // If product not in cache, try to sync from blockchain
+    if (!product) {
+      console.log(
+        `📦 Product ${productId} not in cache - syncing from blockchain...`,
+      );
+      try {
+        const blockchainProduct = await blockchainService.getProduct(productId);
+        if (blockchainProduct) {
+          // Cache the product from blockchain
+          await productService.cacheProduct(productId, blockchainProduct);
+          product = await productService.getProductById(productId);
+        }
+      } catch (syncError) {
+        console.error(`❌ Failed to sync product ${productId}:`, syncError);
+      }
+    }
+
+    // Check if product exists and has stock
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: 'Product not found',
+      });
+    }
+
+    if (product.stock <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Product is out of stock',
+      });
+    }
+
+    // Check if user has wallet address
+    if (!req.user.address) {
+      return res.status(400).json({
+        success: false,
+        message:
+          'User wallet address not found. Please update your profile with wallet address.',
+      });
+    }
+
+    // Get buyer's private key for the transaction
+    const buyerPrivateKey = blockchainService.getPrivateKeyForAddress(
+      req.user.address,
+    );
+
     const result = await blockchainService.purchaseProduct(
       productId,
       req.user.address,
       price,
+      buyerPrivateKey, // Pass buyer's private key
     );
 
     // Update stock in cache after successful purchase
     if (result.success) {
-      // Get current product to update stock
-      const product = await productService.getProductById(productId);
-      if (product && product.stock > 0) {
+      try {
         await productService.updateProductStock(productId, product.stock - 1);
+        console.log(
+          `✅ Updated stock for product ${productId} from ${product.stock} to ${product.stock - 1}`,
+        );
+      } catch (updateError) {
+        console.error(
+          `❌ Failed to update stock for product ${productId}:`,
+          updateError,
+        );
+        // Don't fail the purchase if cache update fails
       }
     }
 
     res.status(200).json({
       success: true,
       message: 'Product purchased successfully',
-      data: result,
+      data: {
+        ...result,
+        productId,
+        newStock: product.stock - 1,
+      },
     });
   } catch (error) {
     console.error('Error purchasing product:', error);
@@ -191,6 +252,38 @@ export const getUserNFTs = async (req, res) => {
     res.status(200).json({
       success: true,
       data: nfts,
+    });
+  } catch (error) {
+    console.error('Error getting user NFTs:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get user NFTs',
+      error: error.message,
+    });
+  }
+};
+
+// Get current user's NFTs
+export const getMyNFTs = async (req, res) => {
+  try {
+    const userAddress = req.user.address;
+
+    if (!userAddress) {
+      return res.status(400).json({
+        success: false,
+        message: 'User address not found in token',
+      });
+    }
+
+    const nfts = await blockchainService.getUserNFTs(userAddress);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        userAddress,
+        nfts,
+        totalNFTs: nfts.length,
+      },
     });
   } catch (error) {
     console.error('Error getting user NFTs:', error);

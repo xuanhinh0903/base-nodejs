@@ -9,12 +9,13 @@ import userRoutes from './routes/user.route.js';
 import authRoutes from './routes/auth.route.js';
 import profileRoutes from './routes/profile.route.js';
 import productRoute from './routes/product.route.js';
-
+import transactionRoute from './routes/transaction.route.js';
+import uploadRoute from './routes/upload.route.js';
 // Create Express application instance
 const app = express();
 
 // Define port for the server to run on
-// Use environment variable PORT if available, otherwise default to 3000
+// Use environment variable PORT if available, otherwise default to 3001
 const serverPort = PORT;
 
 // Middleware configuration
@@ -38,7 +39,8 @@ app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/shop', productRoute);
-
+app.use('/api/transactions', transactionRoute);
+app.use('/api/upload', uploadRoute);
 // Basic route for testing
 app.get('/', (req, res) => {
   res.json({

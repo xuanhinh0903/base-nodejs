@@ -17,7 +17,7 @@ class UserModel {
 
       const usersQuery = `
         SELECT 
-          id, name, email, created_at, updated_at,
+          id, name, email, wallet_address, created_at, updated_at,
           COUNT(*) OVER() as total_count
         FROM users 
         ${whereClause}
@@ -63,7 +63,7 @@ class UserModel {
   async getUserById(id) {
     try {
       const query =
-        'SELECT id, name, email, created_at, updated_at FROM users WHERE id = $1';
+        'SELECT id, name, email, wallet_address, created_at, updated_at FROM users WHERE id = $1';
       const result = await pool.query(query, [id]);
       return result.rows[0] || null;
     } catch (error) {
@@ -78,13 +78,18 @@ class UserModel {
    */
   async createUser(userData) {
     try {
-      const { name, email, password } = userData;
+      const { name, email, password, wallet_address } = userData;
       const query = `
-        INSERT INTO users (name, email, password)
-        VALUES ($1, $2, $3)
-        RETURNING id, name, email, created_at, updated_at
+        INSERT INTO users (name, email, password, wallet_address)
+        VALUES ($1, $2, $3, $4)
+        RETURNING id, name, email, wallet_address, created_at, updated_at
       `;
-      const result = await pool.query(query, [name, email, password]);
+      const result = await pool.query(query, [
+        name,
+        email,
+        password,
+        wallet_address,
+      ]);
       return result.rows[0];
     } catch (error) {
       throw new Error(`Database error: ${error.message}`);
@@ -99,8 +104,45 @@ class UserModel {
   async getUserByEmail(email) {
     try {
       const query =
-        'SELECT id, name, email, password, created_at, updated_at FROM users WHERE email = $1';
+        'SELECT id, name, email, password, wallet_address, created_at, updated_at FROM users WHERE email = $1';
       const result = await pool.query(query, [email.toLowerCase()]);
+      return result.rows[0] || null;
+    } catch (error) {
+      throw new Error(`Database error: ${error.message}`);
+    }
+  }
+
+  /**
+   * Update user's wallet address
+   * @param {number} userId - User ID
+   * @param {string} walletAddress - Wallet address
+   * @returns {Promise<Object>} - Updated user
+   */
+  async updateWalletAddress(userId, walletAddress) {
+    try {
+      const query = `
+        UPDATE users 
+        SET wallet_address = $1, updated_at = NOW()
+        WHERE id = $2
+        RETURNING id, name, email, wallet_address, created_at, updated_at
+      `;
+      const result = await pool.query(query, [walletAddress, userId]);
+      return result.rows[0] || null;
+    } catch (error) {
+      throw new Error(`Database error: ${error.message}`);
+    }
+  }
+
+  /**
+   * Get user by wallet address
+   * @param {string} walletAddress - Wallet address
+   * @returns {Promise<Object|null>} - User data or null
+   */
+  async getUserByWalletAddress(walletAddress) {
+    try {
+      const query =
+        'SELECT id, name, email, wallet_address, created_at, updated_at FROM users WHERE wallet_address = $1';
+      const result = await pool.query(query, [walletAddress.toLowerCase()]);
       return result.rows[0] || null;
     } catch (error) {
       throw new Error(`Database error: ${error.message}`);

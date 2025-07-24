@@ -115,6 +115,7 @@ const getCurrentUserProfile = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        wallet_address: user.wallet_address,
         createdAt: user.created_at,
         updatedAt: user.updated_at,
       },

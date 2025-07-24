@@ -18,7 +18,7 @@ const options = {
     },
     servers: [
       {
-        url: 'http://localhost:3000',
+        url: 'http://localhost:3001',
         description: 'Development server',
       },
     ],
@@ -32,6 +32,33 @@ const options = {
       },
       schemas: {
         User: {
+          type: 'object',
+          properties: {
+            id: {
+              type: 'integer',
+              description: 'User ID',
+            },
+            username: {
+              type: 'string',
+              description: 'Username',
+            },
+            email: {
+              type: 'string',
+              format: 'email',
+              description: 'User email',
+            },
+            wallet_address: {
+              type: 'string',
+              description: 'User wallet address',
+            },
+            created_at: {
+              type: 'string',
+              format: 'date-time',
+              description: 'User creation date',
+            },
+          },
+        },
+        Me: {
           type: 'object',
           properties: {
             id: {

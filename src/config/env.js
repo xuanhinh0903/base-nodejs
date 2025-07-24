@@ -5,7 +5,7 @@ dotenv.config();
 
 // Export environment variables with fallback values
 export const config = {
-  PORT: process.env.PORT || 3000,
+  PORT: process.env.PORT || 3001,
   DB_USER: process.env.DB_USER,
   DB_HOST: process.env.DB_HOST,
   DB_NAME: process.env.DB_NAME,

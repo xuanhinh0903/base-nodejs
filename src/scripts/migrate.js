@@ -41,6 +41,9 @@ const runMigrations = async () => {
       'create-users-table.sql',
       'add-password-column.sql',
       'create-table-category.sql',
+      'add-wallet-address-column.sql',
+      'create-products-table.sql', // Thêm dòng này để tạo bảng products
+      'create-transactions-table.sql', // Thêm dòng này để tạo bảng transactions
     ];
 
     // Run each migration
@@ -50,8 +53,8 @@ const runMigrations = async () => {
 
     console.log('🎉 All migrations completed successfully!');
 
-    // Show table info
-    const tableInfo = await pool.query(`
+    // Show table info for users table
+    const usersTableInfo = await pool.query(`
       SELECT 
         table_name,
         column_name,
@@ -63,7 +66,26 @@ const runMigrations = async () => {
     `);
 
     console.log('\n📋 Users table structure:');
-    tableInfo.rows.forEach(row => {
+    usersTableInfo.rows.forEach(row => {
+      console.log(
+        `   ${row.column_name} (${row.data_type}) ${row.is_nullable === 'NO' ? 'NOT NULL' : 'NULL'}`,
+      );
+    });
+
+    // Show table info for transactions table
+    const transactionsTableInfo = await pool.query(`
+      SELECT 
+        table_name,
+        column_name,
+        data_type,
+        is_nullable
+      FROM information_schema.columns 
+      WHERE table_name = 'transactions'
+      ORDER BY ordinal_position
+    `);
+
+    console.log('\n📋 Transactions table structure:');
+    transactionsTableInfo.rows.forEach(row => {
       console.log(
         `   ${row.column_name} (${row.data_type}) ${row.is_nullable === 'NO' ? 'NOT NULL' : 'NULL'}`,
       );
