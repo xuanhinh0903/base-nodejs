@@ -6,6 +6,7 @@ import swaggerUi from 'swagger-ui-express';
 import { PORT } from './config/env.js';
 import userRoutes from './routes/user.route.js';
 import authRoutes from './routes/auth.route.js';
+import profileRoutes from './routes/profile.route.js';
 import { swaggerSpec } from './utils/swagger.js';
 
 // Create Express application instance
@@ -34,6 +35,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 // API routes
 app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/profile', profileRoutes);
 
 // Basic route for testing
 app.get('/', (req, res) => {

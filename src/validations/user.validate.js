@@ -8,7 +8,6 @@ export const userSchema = yup.object().shape({
 });
 
 export const userValidate = async (req, res, next) => {
-  console.log('🚀 ~ userValidate ~ req.body:', req.body);
   try {
     await userSchema.validate(req.body, { abortEarly: false });
     next();

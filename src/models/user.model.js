@@ -24,6 +24,18 @@ export const User = {
     }
   },
 
+  findById: async userId => {
+    try {
+      const user = await pool.query('SELECT * FROM users WHERE id = $1', [
+        userId,
+      ]);
+      return user.rows[0];
+    } catch (error) {
+      console.error('Error fetching user by id:', error);
+      throw error;
+    }
+  },
+
   create: async user => {
     try {
       const newUser = await pool.query(
