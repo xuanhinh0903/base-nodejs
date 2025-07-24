@@ -4,7 +4,9 @@ import cors from 'cors';
 import helmet from 'helmet';
 import swaggerUi from 'swagger-ui-express';
 import { PORT } from './config/env.js';
-import { specs } from './config/swagger.js';
+import userRoutes from './routes/user.route.js';
+import authRoutes from './routes/auth.route.js';
+import { swaggerSpec } from './utils/swagger.js';
 
 // Create Express application instance
 const app = express();
@@ -27,9 +29,11 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Swagger documentation
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // API routes
+app.use('/api/users', userRoutes);
+app.use('/api/auth', authRoutes);
 
 // Basic route for testing
 app.get('/', (req, res) => {
