@@ -8,10 +8,10 @@ import userRoutes from './routes/user.route.js';
 import authRoutes from './routes/auth.route.js';
 import profileRoutes from './routes/profile.route.js';
 import { swaggerSpec } from './utils/swagger.js';
-
+import logger from './config/logger.js';
 // Create Express application instance
 const app = express();
-
+logger.info('App is running');
 // Define port for the server to run on
 // Use environment variable PORT if available, otherwise default to 3001
 const serverPort = PORT;

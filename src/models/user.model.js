@@ -1,76 +1,36 @@
-import pool from '../utils/db.js';
-import jwt from 'jsonwebtoken';
+const { Model } = require('sequelize');
 
-export const User = {
-  findAll: async () => {
-    try {
-      const users = await pool.query('SELECT * FROM users');
-      return users.rows;
-    } catch (error) {
-      console.error('Error fetching users:', error);
-      throw error;
+module.exports = (sequelize, DataTypes) => {
+  class User extends Model {
+    /**
+     * Helper method for defining associations.
+     * This method is not a part of Sequelize lifecycle.
+     * The `models/index` file will call this method automatically.
+     */
+    static associate(models) {
+      console.log('models', models);
+      // define association here
+      //  User.belongsTo(models.agency, { foreignKey: 'agency_id', targetKey: 'id' });
     }
-  },
+  }
 
-  findOne: async email => {
-    try {
-      const user = await pool.query('SELECT * FROM users WHERE email = $1', [
-        email,
-      ]);
-      return user.rows[0];
-    } catch (error) {
-      console.error('Error fetching user:', error);
-      throw error;
-    }
-  },
-
-  findById: async userId => {
-    try {
-      const user = await pool.query('SELECT * FROM users WHERE id = $1', [
-        userId,
-      ]);
-      return user.rows[0];
-    } catch (error) {
-      console.error('Error fetching user by id:', error);
-      throw error;
-    }
-  },
-
-  create: async user => {
-    try {
-      const newUser = await pool.query(
-        'INSERT INTO users (name, email, password, phone, role) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-        [user.name, user.email, user.password, user.phone, user.role],
-      );
-      return newUser.rows[0];
-    } catch (error) {
-      console.error('Error creating user:', error);
-      throw error;
-    }
-  },
-
-  login: async email => {
-    try {
-      const user = await pool.query('SELECT * FROM users WHERE email = $1', [
-        email,
-      ]);
-      return user.rows[0];
-    } catch (error) {
-      console.error('Error logging in:', error);
-      throw error;
-    }
-  },
-
-  accessToken: async userId => {
-    try {
-      const token = jwt.sign({ userId }, process.env.JWT_SECRET, {
-        expiresIn: '24h',
-      });
-
-      return token;
-    } catch (error) {
-      console.error('Error generating access token:', error);
-      throw error;
-    }
-  },
+  User.init(
+    {
+      uuid: DataTypes.UUID,
+      first_name: DataTypes.STRING,
+      last_name: DataTypes.STRING,
+      email: DataTypes.STRING,
+      password: DataTypes.STRING,
+      status: DataTypes.INTEGER,
+      email_verified: DataTypes.INTEGER,
+      address: DataTypes.STRING,
+      phone_number: DataTypes.STRING,
+    },
+    {
+      sequelize,
+      modelName: 'user',
+      underscored: true,
+    },
+  );
+  return User;
 };

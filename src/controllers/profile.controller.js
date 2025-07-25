@@ -13,7 +13,7 @@ export const getProfile = async (req, res) => {
 
     return res.status(200).json({
       message: 'Profile fetched successfully',
-      status: status['200_NAME'],
+      status: status['201_NAME'],
       data: userWithoutPassword,
     });
   } catch (error) {

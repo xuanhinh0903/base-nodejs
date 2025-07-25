@@ -1,4 +1,4 @@
-import { User } from '../models/user.model.js';
+import { User } from '../repository/user.repo.js';
 
 export const getProfileService = async userId => {
   try {

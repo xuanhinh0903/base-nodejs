@@ -42,10 +42,11 @@ async function createUsersTable() {
     await dbClient.query(`
       CREATE TABLE users (
         id SERIAL PRIMARY KEY,
-        name VARCHAR(100) NOT NULL,
+        first_name VARCHAR(100) NOT NULL,
+        last_name VARCHAR(100) NOT NULL,
         email VARCHAR(100) UNIQUE NOT NULL,
         password VARCHAR(100) NOT NULL,
-        phone VARCHAR(100) NOT NULL,
+        phone_number VARCHAR(100) NOT NULL,
         role VARCHAR(100),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
