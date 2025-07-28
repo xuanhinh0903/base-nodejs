@@ -1,7 +1,8 @@
-import bcrypt from 'bcrypt';
+const bcrypt = require('bcrypt');
+const { v4: uuidv4 } = require('uuid');
 
 /** @type {import('sequelize-cli').Migration} */
-export default {
+module.exports = {
   async up(queryInterface, _Sequelize) {
     const hashedPassword = await bcrypt.hash('123123123', 10);
 
@@ -11,6 +12,7 @@ export default {
       'users',
       [
         {
+          uuid: uuidv4(),
           first_name: 'John',
           last_name: 'Doe',
           email: 'john.doe@example.com',
@@ -20,6 +22,7 @@ export default {
           created_at: new Date(),
         },
         {
+          uuid: uuidv4(),
           first_name: 'Jane',
           last_name: 'Smith',
           email: 'jane.smith@example.com',
@@ -29,6 +32,7 @@ export default {
           created_at: new Date(),
         },
         {
+          uuid: uuidv4(),
           first_name: 'Admin',
           last_name: 'User',
           email: 'admin@example.com',
@@ -38,6 +42,7 @@ export default {
           created_at: new Date(),
         },
         {
+          uuid: uuidv4(),
           first_name: 'Test',
           last_name: 'User',
           email: 'test@example.com',
