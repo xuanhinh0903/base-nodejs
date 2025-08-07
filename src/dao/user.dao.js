@@ -5,7 +5,7 @@ const User = models.user;
 
 class UserDao extends Dao {
   constructor() {
-    super(User);
+    super(User); // Call the constructor of the parent class (Dao)
   }
 
   async findByEmail(email) {

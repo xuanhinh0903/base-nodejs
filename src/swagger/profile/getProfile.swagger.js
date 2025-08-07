@@ -29,11 +29,13 @@
  *                   properties:
  *                     id:
  *                       type: string
- *                     name:
+ *                     first_name:
+ *                       type: string
+ *                     last_name:
  *                       type: string
  *                     email:
  *                       type: string
- *                     phone:
+ *                     phone_number:
  *                       type: string
  *                     role:
  *                       type: string

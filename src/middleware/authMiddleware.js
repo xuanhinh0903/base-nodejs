@@ -1,16 +1,33 @@
-import jwt from 'jsonwebtoken';
+import ApiError from '../helper/apiError.js';
+import httpStatus from 'http-status';
+import passport from 'passport';
 
-export const authMiddleware = (req, res, next) => {
-  const authHeader = req.headers.authorization;
-  const token = authHeader && authHeader.split(' ')[1];
+const verifyCallback = (req, res, resolve, reject) => {
+  return async (err, user, info) => {
+    if (err || info || !user) {
+      return reject(
+        new ApiError(httpStatus.UNAUTHORIZED, 'Please authenticate'),
+      );
+    }
+    req.user = user;
 
-  if (!token) return res.status(401).json({ error: 'Token missing' });
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
-    next();
-  } catch (err) {
-    res.status(403).json({ error: 'Invalid token', message: err.message });
-  }
+    resolve();
+  };
+};
+export const authMiddleware = () => {
+  return async (req, res, next) => {
+    return new Promise((resolve, reject) => {
+      passport.authenticate(
+        'jwt',
+        { session: false },
+        verifyCallback(req, res, resolve, reject),
+      )(req, res, next);
+    })
+      .then(() => {
+        return next();
+      })
+      .catch(err => {
+        return next(err);
+      });
+  };
 };

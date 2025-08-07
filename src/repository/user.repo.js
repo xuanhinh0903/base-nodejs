@@ -1,5 +1,7 @@
 import pool from '../utils/db.js';
-import jwt from 'jsonwebtoken';
+import PassportService from '../services/passport.service.js';
+
+const passportService = new PassportService();
 
 export const User = {
   findAll: async () => {
@@ -39,8 +41,15 @@ export const User = {
   create: async user => {
     try {
       const newUser = await pool.query(
-        'INSERT INTO users (name, email, password, phone, role) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-        [user.name, user.email, user.password, user.phone, user.role],
+        'INSERT INTO users (first_name, last_name, email, password, phone_number, role) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+        [
+          user.first_name,
+          user.last_name,
+          user.email,
+          user.password,
+          user.phone_number,
+          user.role,
+        ],
       );
       return newUser.rows[0];
     } catch (error) {
@@ -63,10 +72,8 @@ export const User = {
 
   accessToken: async userId => {
     try {
-      const token = jwt.sign({ userId }, process.env.JWT_SECRET, {
-        expiresIn: '24h',
-      });
-
+      // Sử dụng PassportService để tạo token thay vì jsonwebtoken trực tiếp
+      const token = passportService.generateAccessToken(userId);
       return token;
     } catch (error) {
       console.error('Error generating access token:', error);

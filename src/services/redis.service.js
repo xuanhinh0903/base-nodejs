@@ -1,10 +1,17 @@
-const redisClient = require('../config/redisClient');
-const RedisHelper = require('../helper/RedisHelper');
-const { jwt } = require('../config/config');
+import redis from 'redis';
 
 class RedisService {
   constructor() {
-    this.redisHelper = new RedisHelper(redisClient);
+    // Tạo Redis client đơn giản
+    this.client = redis.createClient({
+      url: process.env.REDIS_URL || 'redis://localhost:6379',
+    });
+
+    this.client.on('error', err => {
+      console.error('Redis Client Error:', err);
+    });
+
+    this.client.connect();
   }
 
   /**
@@ -13,68 +20,91 @@ class RedisService {
    * @param {Object} tokens
    * @returns {boolean}
    */
-  createTokens = async (uuid, tokens) => {
-    const accessKey = `access_token:${tokens.access.token}`;
-    const refreshKey = `refresh_token:${tokens.refresh.token}`;
-    const accessKeyExpires = jwt.accessExpirationMinutes * 60;
-    const refreshKeyExpires = jwt.refreshExpirationDays * 24 * 60 * 60;
-    await this.redisHelper.setEx(accessKey, accessKeyExpires, uuid);
-    await this.redisHelper.setEx(refreshKey, refreshKeyExpires, uuid);
-    return true;
-  };
+  async createTokens(uuid, tokens) {
+    try {
+      const accessKey = `access_token:${tokens.access.token}`;
+      const refreshKey = `refresh_token:${tokens.refresh.token}`;
+      const accessKeyExpires =
+        (process.env.JWT_ACCESS_EXPIRATION_MINUTES || 30) * 60;
+      const refreshKeyExpires =
+        (process.env.JWT_REFRESH_EXPIRATION_DAYS || 7) * 24 * 60 * 60;
+
+      await this.client.setEx(accessKey, accessKeyExpires, uuid);
+      await this.client.setEx(refreshKey, refreshKeyExpires, uuid);
+      return true;
+    } catch (error) {
+      console.error('Redis createTokens error:', error);
+      return false;
+    }
+  }
 
   /**
-   * Create access and refresh tokens
+   * Check if token exists
    * @param {String} token
    * @param {String} type [access_token,refresh_token]
    * @returns {boolean}
    */
-  hasToken = async (token, type = 'access_token') => {
-    const hasToken = await this.redisHelper.get(`${type}:${token}`);
-    if (hasToken != null) {
-      return true;
+  async hasToken(token, type = 'access_token') {
+    try {
+      const hasToken = await this.client.get(`${type}:${token}`);
+      return hasToken !== null;
+    } catch (error) {
+      console.error('Redis hasToken error:', error);
+      return false;
     }
-    return false;
-  };
+  }
 
   /**
-   * Remove access and refresh tokens
+   * Remove token
    * @param {String} token
    * @param {String} type [access_token,refreshToken]
    * @returns {boolean}
    */
-  removeToken = async (token, type = 'access_token') => {
-    return this.redisHelper.del(`${type}:${token}`);
-  };
+  async removeToken(token, type = 'access_token') {
+    try {
+      const result = await this.client.del(`${type}:${token}`);
+      return result > 0;
+    } catch (error) {
+      console.error('Redis removeToken error:', error);
+      return false;
+    }
+  }
 
   /**
    * Get user
    * @param {String} uuid
    * @returns {Object/Boolean}
    */
-  getUser = async uuid => {
-    const user = await this.redisHelper.get(`user:${uuid}`);
-    if (user != null) {
-      return JSON.parse(user);
+  async getUser(uuid) {
+    try {
+      const user = await this.client.get(`user:${uuid}`);
+      if (user !== null) {
+        return JSON.parse(user);
+      }
+      return false;
+    } catch (error) {
+      console.error('Redis getUser error:', error);
+      return false;
     }
-    return false;
-  };
+  }
 
   /**
    * Set user
    * @param {Object} user
    * @returns {boolean}
    */
-  setUser = async user => {
-    const setUser = await this.redisHelper.set(
-      `user:${user.uuid}`,
-      JSON.stringify(user),
-    );
-    if (!setUser) {
-      return true;
+  async setUser(user) {
+    try {
+      const result = await this.client.set(
+        `user:${user.uuid}`,
+        JSON.stringify(user),
+      );
+      return result === 'OK';
+    } catch (error) {
+      console.error('Redis setUser error:', error);
+      return false;
     }
-    return false;
-  };
+  }
 }
 
-module.exports = RedisService;
+export default RedisService;

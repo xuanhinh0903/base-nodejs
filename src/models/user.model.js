@@ -1,6 +1,6 @@
-const { Model } = require('sequelize');
+import { Model } from 'sequelize';
 
-module.exports = (sequelize, DataTypes) => {
+export default (sequelize, DataTypes) => {
   class User extends Model {
     /**
      * Helper method for defining associations.
@@ -16,20 +16,19 @@ module.exports = (sequelize, DataTypes) => {
 
   User.init(
     {
-      uuid: DataTypes.UUID,
       first_name: DataTypes.STRING,
       last_name: DataTypes.STRING,
       email: DataTypes.STRING,
       password: DataTypes.STRING,
-      status: DataTypes.INTEGER,
-      email_verified: DataTypes.INTEGER,
-      address: DataTypes.STRING,
-      phone_number: DataTypes.STRING,
+      phone_number: DataTypes.STRING, // Sửa từ 'phone' thành 'phone_number' để khớp với database
     },
     {
       sequelize,
       modelName: 'user',
       underscored: true,
+      timestamps: true, // Bật timestamps
+      createdAt: 'created_at', // Chỉ định tên column created_at
+      updatedAt: false, // Tắt updated_at vì database không có column này
     },
   );
   return User;

@@ -9,20 +9,24 @@ const __dirname = path.dirname(__filename);
 const basename = path.basename(__filename);
 const env = process.env.NODE_ENV || 'development';
 
-const config = await import(`${__dirname}/../config/database.js`)[env];
+// Import database config properly
+const dbConfig = await import(`${__dirname}/../config/database.js`);
+const config = dbConfig.default[env];
 
 const db = {};
 
 let sequelize;
-if (config.use_env_variable) {
-  sequelize = new Sequelize(process.env[config.use_env_variable], config);
-} else {
+// Check if config exists and has required properties
+if (config && config.database) {
   sequelize = new Sequelize(
     config.database,
     config.username,
     config.password,
     config,
   );
+} else {
+  console.error('Database configuration not found for environment:', env);
+  process.exit(1);
 }
 
 const modelFiles = fs

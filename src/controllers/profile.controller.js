@@ -1,23 +1,35 @@
-import { getProfileService } from '../services/profile.service.js';
-import { status } from 'http-status';
+import ProfileService from '../services/profile.service.js';
 
-export const getProfile = async (req, res) => {
-  try {
-    const profile = await getProfileService(req.user.userId);
-    if (!profile) {
-      return res.status(404).json({ message: 'Profile not found' });
-    }
-
-    // eslint-disable-next-line no-unused-vars
-    const { password, ...userWithoutPassword } = profile;
-
-    return res.status(200).json({
-      message: 'Profile fetched successfully',
-      status: status['201_NAME'],
-      data: userWithoutPassword,
-    });
-  } catch (error) {
-    console.error('Error getting profile:', error);
-    return res.status(500).json({ message: 'Internal server error' });
+class ProfileController {
+  constructor() {
+    this.profileService = new ProfileService();
   }
-};
+
+  async getProfile(req, res) {
+    const userId = req.user.id; // Lấy user ID từ middleware
+    const result = await this.profileService.getProfile(userId);
+    return res.status(result.statusCode).json(result);
+  }
+
+  async updateProfile(req, res) {
+    const userId = req.user.id;
+    const profileData = req.body;
+    const result = await this.profileService.updateProfile(userId, profileData);
+    return res.status(result.statusCode).json(result);
+  }
+
+  async changePassword(req, res) {
+    const userId = req.user.id;
+    const { oldPassword, newPassword } = req.body;
+    const result = await this.profileService.changePassword(
+      userId,
+      oldPassword,
+      newPassword,
+    );
+    return res.status(result.statusCode).json(result);
+  }
+}
+
+// Export instance để sử dụng
+const profileController = new ProfileController();
+export { profileController };

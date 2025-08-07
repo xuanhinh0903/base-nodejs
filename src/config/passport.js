@@ -4,9 +4,13 @@ import config from './config.js';
 import { tokenTypes } from './tokens.js';
 import TokenDao from '../dao/token.dao.js';
 import RedisService from '../services/redis.service.js';
+import PassportService from '../services/passport.service.js';
 import models from '../models/index.js';
+import logger from './logger.js';
 
 const User = models.user;
+const passportService = new PassportService();
+
 const jwtOptions = {
   secretOrKey: config.jwt.secret,
   jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -29,9 +33,15 @@ const jwtVerify = async (req, payload, done) => {
       return done(null, false);
     }
 
+    try {
+      await passportService.verifyToken(authorization[1]);
+    } catch (error) {
+      logger.error(error);
+      return done(null, false);
+    }
+
     let tokenDoc = redisService.hasToken(authorization[1], 'access_token');
     if (!tokenDoc) {
-      console.log('Cache Missed!');
       tokenDoc = await tokenDao.findOne({
         token: authorization[1],
         type: tokenTypes.ACCESS,

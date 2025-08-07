@@ -21,13 +21,17 @@
  *                 type: string
  *                 description: User's password
  *                 default: 123123123
- *               name:
+ *               first_name:
  *                 type: string
- *                 description: User's name
- *                 default: Xuan Hinh
- *               phone:
+ *                 description: User's first name
+ *                 default: Xuan
+ *               last_name:
  *                 type: string
- *                 description: User's phone
+ *                 description: User's last name
+ *                 default: Hinh
+ *               phone_number:
+ *                 type: string
+ *                 description: User's phone number
  *                 default: 0909090909
  *     responses:
  *       200:

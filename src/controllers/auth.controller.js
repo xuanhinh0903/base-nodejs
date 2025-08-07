@@ -1,33 +1,38 @@
-import { loginService, registerService } from '../services/auth.service.js';
-import { status } from 'http-status';
+import AuthService from '../services/auth.service.js';
 
-export const login = async (req, res) => {
-  try {
-    const token = await loginService(req, res);
-
-    return res
-      .status(200)
-      .json({ message: 'Login successful', status: status['201_NAME'], token });
-  } catch (error) {
-    console.error('Error logging in:', error);
-    return res.status(500).json({ message: 'Internal server error' });
+class AuthController {
+  constructor() {
+    this.authService = new AuthService();
   }
-};
 
-export const register = async (req, res) => {
-  try {
-    const newUser = await registerService(req.body);
-    if (!newUser) {
-      return res.status(400).json({ message: 'User already exists' });
-    }
-
-    return res.status(201).json({
-      message: 'User created successfully',
-      status: status['201_NAME'],
-      data: newUser,
-    });
-  } catch (error) {
-    console.error('Error registering:', error);
-    return res.status(500).json({ message: 'Internal server error' });
+  async login(req, res) {
+    const { email, password } = req.body;
+    const result = await this.authService.loginWithEmailPassword(
+      email,
+      password,
+    );
+    return res.status(result.statusCode).json(result);
   }
-};
+
+  async register(req, res) {
+    const userData = req.body;
+    const result = await this.authService.registerUser(userData);
+    return res.status(result.statusCode).json(result);
+  }
+
+  async refreshToken(req, res) {
+    const { refreshToken } = req.body;
+    const result = await this.authService.refreshToken(refreshToken);
+    return res.status(result.statusCode).json(result);
+  }
+
+  async logout(req, res) {
+    const userId = req.user?.id;
+    const result = await this.authService.logout(userId);
+    return res.status(result.statusCode).json(result);
+  }
+}
+
+// Export instance để sử dụng
+const authController = new AuthController();
+export { authController };

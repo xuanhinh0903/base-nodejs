@@ -1,11 +1,16 @@
 import express from 'express';
-import { login, register } from '../controllers/auth.controller.js';
-import { userValidate } from '../validations/user.validate.js';
+import { authController } from '../controllers/auth.controller.js';
+import { passportAuthMiddleware } from '../middleware/passportAuthMiddleware.js';
 
 const router = express.Router();
 
-router.post('/register', userValidate, register);
-
-router.post('/login', login);
+router.post('/login', authController.login.bind(authController));
+router.post('/register', authController.register.bind(authController));
+router.post('/refresh-token', authController.refreshToken.bind(authController));
+router.post(
+  '/logout',
+  passportAuthMiddleware.authenticate(),
+  authController.logout.bind(authController),
+);
 
 export default router;

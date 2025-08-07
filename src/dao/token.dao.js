@@ -17,4 +17,4 @@ class TokenDao extends Dao {
   }
 }
 
-module.exports = TokenDao;
+export default TokenDao;

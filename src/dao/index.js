@@ -1,4 +1,3 @@
-// Data Access Object (DAO) is a design pattern that provides an interface for accessing data from a database.
 import logger from '../config/logger.js';
 
 class Dao {
@@ -13,7 +12,6 @@ class Dao {
       })
       .catch(e => {
         logger.error(e);
-        console.log(e);
       });
   }
 
@@ -24,7 +22,6 @@ class Dao {
       })
       .catch(e => {
         logger.error(e);
-        console.log(e);
       });
   }
 
@@ -39,7 +36,6 @@ class Dao {
         })
         .catch(e => {
           logger.error(e);
-          console.log(e);
         });
     }
     return this.Model.findOne({
@@ -52,7 +48,6 @@ class Dao {
       })
       .catch(e => {
         logger.error(e);
-        console.log(e);
       });
   }
 
@@ -63,7 +58,6 @@ class Dao {
       })
       .catch(e => {
         logger.error(e);
-        console.log(e);
       });
   }
 
@@ -74,7 +68,6 @@ class Dao {
       })
       .catch(e => {
         logger.error(e);
-        console.log(e);
       });
   }
 
@@ -88,10 +81,9 @@ class Dao {
         })
         .catch(e => {
           logger.error(e);
-          console.log(e);
         });
     } catch (e) {
-      console.log(e);
+      logger.error(e);
     }
   }
 
@@ -131,7 +123,6 @@ class Dao {
       })
       .catch(e => {
         logger.error(e);
-        console.log(e.message);
       });
   }
 
@@ -142,7 +133,6 @@ class Dao {
       })
       .catch(e => {
         logger.error(e);
-        console.log(e);
       });
   }
 
@@ -201,4 +191,4 @@ class Dao {
       });
   }
 }
-module.exports = Dao;
+export default Dao;
