@@ -20,8 +20,9 @@ class ProfileService {
         };
       }
 
-      // Loại bỏ password khỏi response
-      const { password: _password, ...userProfile } = user;
+      // Convert Sequelize instance to plain object và loại bỏ password
+      const userData = user.toJSON ? user.toJSON() : user;
+      const { password: _password, ...userProfile } = userData;
 
       return {
         statusCode,
@@ -53,8 +54,9 @@ class ProfileService {
       // Cập nhật profile data
       const updatedUser = await this.userDao.update(userId, profileData);
 
-      // Loại bỏ password khỏi response
-      const { password: _password, ...userProfile } = updatedUser;
+      // Convert Sequelize instance to plain object và loại bỏ password
+      const userData = updatedUser.toJSON ? updatedUser.toJSON() : updatedUser;
+      const { password: _password, ...userProfile } = userData;
 
       return {
         statusCode,

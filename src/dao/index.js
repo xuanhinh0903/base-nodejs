@@ -1,5 +1,6 @@
 import logger from '../config/logger.js';
 
+// Data Access Object
 class Dao {
   constructor(model) {
     this.Model = model;

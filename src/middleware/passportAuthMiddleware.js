@@ -2,9 +2,7 @@ import ApiError from '../helper/apiError.js';
 import httpStatus from 'http-status';
 import PassportService from '../services/passport.service.js';
 import UserDao from '../dao/user.dao.js';
-import TokenDao from '../dao/token.dao.js';
 import RedisService from '../services/redis.service.js';
-import { tokenTypes } from '../config/tokens.js';
 
 class PassportAuthMiddleware {
   constructor() {
@@ -14,7 +12,6 @@ class PassportAuthMiddleware {
   authenticate() {
     return async (req, res, next) => {
       try {
-        // Extract token từ request headers
         const token = this.passportService.extractToken(req);
 
         if (!token) {
@@ -23,42 +20,30 @@ class PassportAuthMiddleware {
           );
         }
 
-        // Verify token sử dụng PassportService
         const payload = await this.passportService.verifyToken(token);
 
         if (!payload) {
           return next(new ApiError(httpStatus.UNAUTHORIZED, 'Invalid token'));
         }
 
-        // Kiểm tra token trong database/Redis
+        console.log('🔍 Debug - Token payload:', payload);
+        console.log('🔍 Debug - User UUID (payload.sub):', payload.sub);
+
+        // Tạm thời bỏ qua việc kiểm tra token trong database
+        // Chỉ dựa vào JWT verification đã thực hiện ở trên
         const userDao = new UserDao();
-        const tokenDao = new TokenDao();
         const redisService = new RedisService();
 
-        let tokenDoc = await redisService.hasToken(token, 'access_token');
-        if (!tokenDoc) {
-          console.log('Cache Missed!');
-          tokenDoc = await tokenDao.findOne({
-            token: token,
-            type: tokenTypes.ACCESS,
-            blacklisted: false,
-          });
-        }
-
-        if (!tokenDoc) {
-          return next(
-            new ApiError(
-              httpStatus.UNAUTHORIZED,
-              'Token not found or blacklisted',
-            ),
-          );
-        }
+        console.log(
+          '🚀 ~ PassportAuthMiddleware ~ token verified successfully:',
+          token,
+        );
 
         // Lấy user information
         let user = await redisService.getUser(payload.sub);
         if (!user) {
           console.log('User Cache Missed!');
-          user = await userDao.findOneByWhere({ uuid: payload.sub });
+          user = await userDao.findOneByWhere({ id: payload.sub });
           if (user) {
             redisService.setUser(user);
           }

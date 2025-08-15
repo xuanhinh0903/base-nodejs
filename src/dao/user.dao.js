@@ -17,10 +17,6 @@ class UserDao extends Dao {
       return count !== 0;
     });
   }
-
-  async createWithTransaction(user, transaction) {
-    return User.create(user, { transaction });
-  }
 }
 
 export default UserDao;

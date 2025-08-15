@@ -9,8 +9,9 @@ class TokenService {
     this.passportService = new PassportService();
   }
 
-  generateToken(uuid, expires, type, secret = process.env.JWT_SECRET) {
-    // Sử dụng PassportService để tạo token thay vì jsonwebtoken trực tiếp
+  generateToken(uuid, expires, type, secret = null) {
+    // Sử dụng PassportService để tạo token
+    // Nếu không truyền secret, PassportService sẽ sử dụng config.jwt.secret
     return this.passportService.generateToken(uuid, expires, type, secret);
   }
 
@@ -19,17 +20,22 @@ class TokenService {
   }
 
   async generateAuthTokens(user) {
+    console.log('🔍 Debug - User object in generateAuthTokens:', user);
+    console.log('🔍 Debug - User object keys:', Object.keys(user));
+    console.log('🔍 Debug - User ID:', user.id);
+    console.log('🔍 Debug - User dataValues:', user.dataValues);
+
     const accessTokenExpires = moment().add(5, 'minutes');
 
     const accessToken = await this.generateToken(
-      user.uuid,
+      user.id,
       accessTokenExpires,
       tokenTypes.ACCESS,
     );
 
     const refreshTokenExpires = moment().add(5, 'days');
     const refreshToken = await this.generateToken(
-      user.uuid,
+      user.id,
       refreshTokenExpires,
       tokenTypes.REFRESH,
     );

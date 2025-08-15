@@ -1,4 +1,4 @@
-import { Strategy as JwtStrategy, ExtractJwt } from 'passport-jwt';
+import { ExtractJwt } from 'passport-jwt';
 import jwt from 'jsonwebtoken';
 import moment from 'moment/moment.js';
 import { tokenTypes } from '../config/tokens.js';
@@ -15,6 +15,9 @@ class PassportService {
 
   // Tạo JWT token sử dụng passport-jwt
   generateToken(uuid, expires, type, secret = config.jwt.secret) {
+    console.log('🔍 Debug - Generating token with uuid:', uuid);
+    console.log('🔍 Debug - Token type:', type);
+
     const payload = {
       sub: uuid,
       iat: moment().unix(),
@@ -22,92 +25,69 @@ class PassportService {
       type,
     };
 
+    console.log('🔍 Debug - Token payload:', payload);
+
     // Sử dụng jsonwebtoken để tạo token (passport-jwt chỉ verify, không tạo)
     return jwt.sign(payload, secret);
   }
 
-  // Verify JWT token sử dụng passport-jwt strategy
   verifyToken(token) {
     return new Promise((resolve, reject) => {
-      const strategy = new JwtStrategy(this.jwtOptions, (payload, done) => {
-        try {
-          // Cho phép cả access và refresh tokens
-          if (
-            payload.type !== tokenTypes.ACCESS &&
-            payload.type !== tokenTypes.REFRESH
-          ) {
-            return done(new Error('Invalid token type'), false);
-          }
-          done(null, payload);
-        } catch (error) {
-          done(error, false);
-        }
-      });
+      try {
+        console.log('🔍 Debug - Token to verify:', token);
+        console.log('🔍 Debug - JWT Secret:', config.jwt.secret);
 
-      strategy.authenticate(
-        { headers: { authorization: `Bearer ${token}` } },
-        (err, payload) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve(payload);
-          }
-        },
-      );
+        // Sử dụng jsonwebtoken.verify trực tiếp thay vì passport-jwt strategy
+        const payload = jwt.verify(token, config.jwt.secret);
+
+        // Kiểm tra token type
+        if (
+          payload.type !== tokenTypes.ACCESS &&
+          payload.type !== tokenTypes.REFRESH
+        ) {
+          return reject(new Error('Invalid token type'));
+        }
+
+        console.log('🔍 Debug - Token verified successfully:', payload);
+        resolve(payload);
+      } catch (error) {
+        console.error('🔍 Debug - Token verification failed:', error.message);
+        reject(error);
+      }
     });
   }
 
   // Verify chỉ access token
   verifyAccessToken(token) {
     return new Promise((resolve, reject) => {
-      const strategy = new JwtStrategy(this.jwtOptions, (payload, done) => {
-        try {
-          if (payload.type !== tokenTypes.ACCESS) {
-            return done(new Error('Invalid token type'), false);
-          }
-          done(null, payload);
-        } catch (error) {
-          done(error, false);
-        }
-      });
+      try {
+        const payload = jwt.verify(token, config.jwt.secret);
 
-      strategy.authenticate(
-        { headers: { authorization: `Bearer ${token}` } },
-        (err, payload) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve(payload);
-          }
-        },
-      );
+        if (payload.type !== tokenTypes.ACCESS) {
+          return reject(new Error('Invalid token type'));
+        }
+
+        resolve(payload);
+      } catch (error) {
+        reject(error);
+      }
     });
   }
 
   // Verify chỉ refresh token
   verifyRefreshToken(token) {
     return new Promise((resolve, reject) => {
-      const strategy = new JwtStrategy(this.jwtOptions, (payload, done) => {
-        try {
-          if (payload.type !== tokenTypes.REFRESH) {
-            return done(new Error('Invalid token type'), false);
-          }
-          done(null, payload);
-        } catch (error) {
-          done(error, false);
-        }
-      });
+      try {
+        const payload = jwt.verify(token, config.jwt.secret);
 
-      strategy.authenticate(
-        { headers: { authorization: `Bearer ${token}` } },
-        (err, payload) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve(payload);
-          }
-        },
-      );
+        if (payload.type !== tokenTypes.REFRESH) {
+          return reject(new Error('Invalid token type'));
+        }
+
+        resolve(payload);
+      } catch (error) {
+        reject(error);
+      }
     });
   }
 

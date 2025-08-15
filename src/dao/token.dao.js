@@ -1,7 +1,7 @@
 import Dao from './index.js';
 import models from '../models/index.js';
 
-const Token = models.token;
+const Token = models.Token;
 
 class TokenDao extends Dao {
   constructor() {

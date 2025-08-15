@@ -35,8 +35,8 @@ class AuthService {
       }
 
       // Tạo access token và refresh token sử dụng PassportService
-      const accessToken = this.passportService.generateAccessToken(user.uuid);
-      const refreshToken = this.passportService.generateRefreshToken(user.uuid);
+      const accessToken = this.passportService.generateAccessToken(user.id);
+      const refreshToken = this.passportService.generateRefreshToken(user.id);
 
       return {
         statusCode,

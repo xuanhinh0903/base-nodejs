@@ -8,3 +8,7 @@ node_modules
 artifacts
 
 logs
+
+# Audit files
+*.audit.json
+logs/*.audit.json

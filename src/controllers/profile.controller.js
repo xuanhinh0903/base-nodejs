@@ -8,14 +8,38 @@ class ProfileController {
   async getProfile(req, res) {
     const userId = req.user.id; // Lấy user ID từ middleware
     const result = await this.profileService.getProfile(userId);
-    return res.status(result.statusCode).json(result);
+
+    if (result.statusCode === 200) {
+      return res.status(result.statusCode).json({
+        status: true,
+        message: result.message,
+        data: result.data,
+      });
+    }
+
+    return res.status(result.statusCode).json({
+      status: false,
+      message: result.message,
+    });
   }
 
   async updateProfile(req, res) {
     const userId = req.user.id;
     const profileData = req.body;
     const result = await this.profileService.updateProfile(userId, profileData);
-    return res.status(result.statusCode).json(result);
+
+    if (result.statusCode === 200) {
+      return res.status(result.statusCode).json({
+        status: true,
+        message: result.message,
+        data: result.data,
+      });
+    }
+
+    return res.status(result.statusCode).json({
+      status: false,
+      message: result.message,
+    });
   }
 
   async changePassword(req, res) {
@@ -26,7 +50,18 @@ class ProfileController {
       oldPassword,
       newPassword,
     );
-    return res.status(result.statusCode).json(result);
+
+    if (result.statusCode === 200) {
+      return res.status(result.statusCode).json({
+        status: true,
+        message: result.message,
+      });
+    }
+
+    return res.status(result.statusCode).json({
+      status: false,
+      message: result.message,
+    });
   }
 }
 
